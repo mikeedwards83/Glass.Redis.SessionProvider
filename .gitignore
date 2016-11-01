@@ -1,0 +1,10 @@
+Glass.Redis.SessionProvider.Tests/bin/
+Glass.Redis.SessionProvider.Tests/obj/
+Glass.Redis.SessionProvider/bin/
+Glass.Redis.SessionProvider/obj/
+packages/
+*.ncrunchsolution
+*.ncrunchproject
+.suo
+*.ncrunchsolution.user
+*.crunchsolution.cache
