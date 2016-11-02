@@ -8,7 +8,7 @@ namespace Glass.Redis.SessionProvider
 {
     public class Log
     {
-        public  static Log Instance { get; private set; }
+        private  static Log Instance { get; set; }
         public const string Prefix = "Glass Redis Session: ";
 
 
