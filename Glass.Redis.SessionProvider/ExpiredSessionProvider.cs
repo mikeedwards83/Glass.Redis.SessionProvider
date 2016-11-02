@@ -57,13 +57,21 @@ namespace Glass.Redis.SessionProvider
                     Updated(DateTime.Now.AddMinutes(RetryTime), id);
                     bool found = GetItem(id, out data);
 
-                    Sitecore.Diagnostics.Log.Debug("Expired session " + id);
+                    Log.Debug("Get expired session " + id);
 
                     //if we aquire the lock but don't have any data then we should remove the key.
                     if (found == true && data == null)
                     {
-                        Sitecore.Diagnostics.Log.Debug("Removing session null data "+id);
+                        Log.Debug("Removing session null data " + id);
                         Remove(id);
+                    }
+                    else if (found == true && data != null)
+                    {
+                        Log.Debug("Found data for" + id);
+                    }
+                    else
+                    {
+                        Log.Debug("Data not found" + id);
                     }
                 }
             }
@@ -74,7 +82,7 @@ namespace Glass.Redis.SessionProvider
         public bool GetItem(string id, out SessionStateStoreData data)
         {
             //this is not exclusive
-            var keys = new KeyGenerator(id, _applicationName);
+            var keys = new KeyGenerator(id, "");
             string expectedLock = Guid.NewGuid().ToString();
 
             RedisKey[] keyArgs = new RedisKey[] { keys.LockKey, keys.DataKey };
@@ -134,7 +142,7 @@ namespace Glass.Redis.SessionProvider
 
         public void Remove(string id)
         {
-            Sitecore.Diagnostics.Log.Debug("Removing session " + id);
+            Log.Debug("Removing session " + id);
             Database.SortedSetRemove(_expiredIndex, id);
         }
     }

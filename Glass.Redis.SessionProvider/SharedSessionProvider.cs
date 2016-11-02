@@ -23,7 +23,7 @@ namespace Glass.Redis.SessionProvider
         public int Timeout { get; set; }
         public string SessionType { get; set; }
         public string Host { get; set; }
-
+        private int _skewTime = 2;
 
         public SharedSessionProvider()
         {
@@ -56,6 +56,9 @@ namespace Glass.Redis.SessionProvider
 
         private string CleanId(string id)
         {
+            if (id == null)
+                return id;
+
             return id.Replace(SessionType, "");
         }
 
@@ -69,7 +72,7 @@ namespace Glass.Redis.SessionProvider
         {
             //stay in session 2 minute longer than expected so that we have a chance to manually remove it.
 
-            return _redisProvider.CreateNewStoreData(context, timeout+2);
+            return _redisProvider.CreateNewStoreData(context, timeout+ _skewTime);
         }
 
 
@@ -104,10 +107,11 @@ namespace Glass.Redis.SessionProvider
             item.Items["6247030A-D2EF-46C6-A62C-AD315F9D0E06"] = "";
 
             //stay in session 2 minute longer than expected so that we have a chance to manually remove it.
-            //item.Timeout  =  item.Timeout+2;
+            item.Timeout  =  item.Timeout+ _skewTime;
             _expiredSessionProvider.Updated(id);
-
             _redisProvider.SetAndReleaseItemExclusive(context, id,item, lockId, newItem);
+            Log.Debug("Saved id " + id);
+
         }
 
         public override void RemoveItem(HttpContext context, string id, object lockId, SessionStateStoreData item)
@@ -132,7 +136,13 @@ namespace Glass.Redis.SessionProvider
         {
 
             var result =  _expiredSessionProvider.Expired(signalTime.AddMinutes(-Timeout), out id);
-            id = CleanId(id);
+
+            if (id != null)
+            {
+                id = CleanId(id);
+
+                Log.Debug(string.Format("Item Expired {0} with data {1}", id, result != null));
+            }
             return result;
         }
 
@@ -140,6 +150,8 @@ namespace Glass.Redis.SessionProvider
         {
             id = GetId(id);
             //we should need to expire the standard redis provider, this should expire on its own in the future.
+            Log.Debug("Item Removed " + id);
+
             _expiredSessionProvider.Remove(id);
 
         }
